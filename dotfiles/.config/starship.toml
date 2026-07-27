@@ -1,0 +1,119 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+add_newline = false
+palette = "aropixel"
+
+# Blocs deux teintes + bloc ambre dedie aux modifs (groupe optionnel de git_status).
+# Chevrons durs. Symboles de langages = icones Nerd Font explicites (pas d'emoji).
+# NB: tous les glyphes sont ecrits via chr(0x..) pour eviter toute perte de glyphe.
+format = """
+[ 󰣇 ](bg:brand fg:black)\
+[](fg:brand bg:surf)\
+$directory\
+$git_branch\
+$git_status\
+$nodejs$python$rust$golang$java$lua$ruby$php$c$cpp$deno$bun$kotlin$scala$haskell$elixir$zig$docker_context\
+$line_break\
+$character"""
+
+right_format = """$cmd_duration$time"""
+
+[palettes.aropixel]
+brand = "#03F1C5"
+blue  = "#87B0F9"
+amber = "#F9E2AF"
+red   = "#F38BA8"
+ink   = "#CDD6F4"
+mut   = "#8A90AC"
+black = "#0B0B10"
+surf  = "#232735"
+surf2 = "#2E3446"
+
+[directory]
+format = "[ $path ](fg:brand bg:surf)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = ""
+format = '[](fg:surf bg:surf2)[$symbol $branch ](fg:blue bg:surf2)[](fg:surf2)'
+
+[git_status]
+format = '( [](fg:amber)[$all_status$ahead_behind](fg:black bg:amber)[](fg:amber))'
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+conflicted = "~${count}"
+untracked = " ?${count}"
+modified = " !${count}"
+staged = " +${count}"
+renamed = " »${count}"
+deleted = " ✘${count}"
+
+[character]
+success_symbol = "[❯](bold brand)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold brand)"
+
+[cmd_duration]
+min_time = 500
+format = "[󰔛 $duration ](fg:mut)"
+
+[time]
+disabled = false
+time_format = "%R"
+format = "[ $time](fg:mut)"
+
+[nodejs]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[python]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[rust]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[golang]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[java]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[lua]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[ruby]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[php]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[c]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[cpp]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[deno]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[bun]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[kotlin]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[scala]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[haskell]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[elixir]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[zig]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"
+[docker_context]
+symbol = ""
+format = "[ $symbol$version](fg:mut)"

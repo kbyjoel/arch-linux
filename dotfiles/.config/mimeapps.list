@@ -1,0 +1,67 @@
+# Associations fichier -> application (spec XDG).
+# Doc : https://specifications.freedesktop.org/mime-apps-spec/latest/
+#
+# C'est ce fichier qui décide quel programme s'ouvre quand on double-clique
+# depuis Dolphin. Sans lui, Dolphin annonce « aucun programme associé » —
+# c'est l'état par défaut d'une install fraîche, HyDE ne le corrigeait pas
+# non plus (son pkg_core.lst livre dolphin sans aucune visionneuse).
+#
+# PRÉREQUIS INDISPENSABLE (piège Hyprland) : pour que Dolphin résolve ces
+# défauts, KDE doit avoir enregistré les .desktop comme « services » dans son
+# cache ksycoca. Or ce recensement est piloté par ~/.config/menus/applications.menu
+# (balises <AppDir>). Sur un système sans environnement de bureau complet, ce
+# fichier n'est fourni par AUCUN paquet : sans lui, ksycoca reste VIDE et TOUTES
+# ces associations sont ignorées (Dolphin redemande l'appli, PDF comme image).
+# Le repo livre donc dotfiles/.config/menus/applications.menu. Voir son en-tête.
+#
+# Les valeurs sont des noms de fichiers .desktop, cherchés dans
+# /usr/share/applications/ puis ~/.local/share/applications/. Pour retrouver
+# le bon nom quand on ajoute une entrée :
+#     grep -l MimeType /usr/share/applications/*.desktop
+#
+# [Default Applications] = le choix par défaut.
+# [Added Associations]   = ce qui apparaît dans le menu « Ouvrir avec ».
+# Le premier de la liste gagne, d'où le `;` final sur les listes à un élément.
+
+[Default Applications]
+# --- PDF ---------------------------------------------------------------
+# Chrome plutôt qu'un lecteur dédié : son moteur PDF est déjà là, et les liens
+# des PDF s'ouvrent dans le même navigateur que le reste.
+application/pdf=google-chrome-stable.desktop;
+
+# --- Images ------------------------------------------------------------
+# imv : visionneuse Wayland minimaliste (voir packages/pacman.txt). Flèches
+# pour parcourir le dossier, molette pour zoomer, `q` pour fermer.
+image/png=imv.desktop;
+image/jpeg=imv.desktop;
+image/gif=imv.desktop;
+image/webp=imv.desktop;
+image/bmp=imv.desktop;
+image/tiff=imv.desktop;
+image/heif=imv.desktop;
+image/avif=imv.desktop;
+image/svg+xml=imv.desktop;
+image/jxl=imv.desktop;
+image/qoi=imv.desktop;
+
+# La liste ci-dessus reprend le champ MimeType de /usr/share/applications/
+# imv.desktop, et chaque format est bien épaulé par une lib dans
+# `ldd /usr/bin/imv-wayland` (librsvg pour le SVG, libjxl, libnsgif, libheif…).
+# Le binaire /usr/bin/imv n'est qu'un script qui aiguille vers imv-wayland ou
+# imv-x11 selon $WAYLAND_DISPLAY — ldd dessus ne donne rien.
+
+# --- Web ---------------------------------------------------------------
+text/html=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+x-scheme-handler/about=google-chrome.desktop
+x-scheme-handler/unknown=google-chrome.desktop
+
+# Écrit par Claude Code (`claude --continue` depuis un lien).
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+
+[Added Associations]
+# Alternatives proposées dans « Ouvrir avec » sans devenir le défaut.
+application/pdf=google-chrome-stable.desktop;
+image/png=google-chrome-stable.desktop;
+image/jpeg=google-chrome-stable.desktop;

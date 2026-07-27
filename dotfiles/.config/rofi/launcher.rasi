@@ -1,0 +1,180 @@
+/**
+ * Rofi launcher — "Sideview" layout
+ *
+ * Adapted from HyDE's style_1.rasi (github.com/hyde-project/hyde), standalone:
+ * the wallbash-generated wall.thmb/wall.blur are replaced by a single static
+ * image (~/.config/rofi/wallpaper.jpg). Swap that file to change the look.
+ */
+
+configuration {
+    modi:                        "drun,filebrowser,window,run";
+    show-icons:                  true;
+    display-drun:                "";
+    display-run:                 "";
+    display-filebrowser:         "";
+    display-window:              "";
+    drun-display-format:         "{name}";
+    window-format:               "{w}{t}";
+    font:                        "JetBrainsMono Nerd Font 10";
+    icon-theme:                  "Zafiro-Nord-Black";
+}
+
+@theme "~/.config/rofi/theme.rasi"
+
+
+// Main //
+window {
+    height:                      33em;
+    width:                       63em;
+    transparency:                "real";
+    fullscreen:                  false;
+    enabled:                     true;
+    cursor:                      "default";
+    spacing:                     0em;
+    padding:                     0em;
+    border:                      2px;
+    border-radius:                20px;
+    border-color:                @main-br;
+    background-color:            @main-bg;
+}
+mainbox {
+    enabled:                     true;
+    spacing:                     0em;
+    padding:                     0em;
+    orientation:                 horizontal;
+    children:                    [ "dummywall" , "listbox" ];
+    background-color:            transparent;
+}
+dummywall {
+    spacing:                     0em;
+    padding:                     0em;
+    width:                       37em;
+    expand:                      false;
+    orientation:                 horizontal;
+    children:                    [ "mode-switcher" , "inputbar" ];
+    background-color:            transparent;
+    background-image:            url("~/.config/rofi/wallpaper.jpg", height);
+}
+
+
+// Modes //
+mode-switcher{
+    orientation:                 vertical;
+    enabled:                     true;
+    width:                       3.8em;
+    padding:                     9.2em 0.5em 9.2em 0.5em;
+    spacing:                     1.2em;
+    background-color:            transparent;
+    background-image:            url("~/.config/rofi/wallpaper.jpg", height);
+}
+button {
+    cursor:                      pointer;
+    border-radius:               2em;
+    /* Variante "Propo" et pas la Nerd Font normale — sinon le glyphe est décalé
+       de ~4 px vers la DROITE dans sa pastille. En "JetBrainsMono Nerd Font",
+       l'avance logique de ces icônes est de 12 px à cette taille (vérifiable
+       avec `pango-view --font="JetBrainsMono Nerd Font 15" --text=""`, Pango
+       étant le moteur de rofi) alors que l'encre en fait 19 à 21 : le dessin
+       déborde de sa boîte vers la droite. Rofi centre la BOÎTE, pas l'encre,
+       d'où le décalage. La variante Propo donne une avance de 18 à 21 px, qui
+       colle à l'encre. Mesuré : décalage ramené de +3,5/+4,5 px à +0,5 px. */
+    font:                        "JetBrainsMono Nerd Font Propo 15";
+
+    /* Centre le glyphe dans la pastille. Indispensable : rofi aligne un texte
+       en haut à gauche par défaut, et le bloc `textbox` en fin de fichier ne
+       rattrape pas le coup — les sélecteurs rasi matchent le NOM du widget, or
+       ces boutons s'appellent `button`. À vérifier avec `rofi -dump-theme`,
+       qui résout tout le thème sans ouvrir de fenêtre. */
+    horizontal-align:            0.5;
+    vertical-align:              0.5;
+    background-color:            @main-bg;
+    text-color:                  @main-fg;
+}
+button selected {
+    background-color:            @select-bg;
+    text-color:                  @select-fg;
+}
+
+
+// Inputs //
+inputbar {
+    enabled:                     true;
+    children:                    [ "entry" ];
+    background-color:            transparent;
+}
+entry {
+    enabled:                     false;
+}
+
+
+// Lists //
+listbox {
+    spacing:                     0em;
+    padding:                     2em;
+    children:                    [ "dummy" , "listview" , "dummy" ];
+    background-color:            transparent;
+}
+listview {
+    enabled:                     true;
+    spacing:                     0em;
+    padding:                     0em;
+    columns:                     1;
+    lines:                       8;
+    cycle:                       true;
+    dynamic:                     true;
+    scrollbar:                   false;
+    layout:                      vertical;
+    reverse:                     false;
+    expand:                      false;
+    fixed-height:                true;
+    fixed-columns:               true;
+    cursor:                      "default";
+    background-color:            transparent;
+    text-color:                  @main-fg;
+}
+dummy {
+    background-color:            transparent;
+}
+
+
+// Elements //
+element {
+    enabled:                     true;
+    spacing:                     0.8em;
+    padding:                     0.4em 0.4em 0.4em 1.5em;
+    cursor:                      pointer;
+    background-color:            transparent;
+    text-color:                  @main-fg;
+}
+element selected.normal {
+    background-color:            @select-bg;
+    text-color:                  @select-fg;
+}
+element-icon {
+    size:                        2.8em;
+    cursor:                      inherit;
+    background-color:            transparent;
+    text-color:                  inherit;
+}
+element-text {
+    vertical-align:              0.5;
+    horizontal-align:            0.0;
+    cursor:                      inherit;
+    background-color:            transparent;
+    text-color:                  inherit;
+}
+
+// Error message //
+error-message {
+    text-color:                  @main-fg;
+    background-color:            @main-bg;
+    text-transform:              capitalize;
+    children:                    [ "textbox" ];
+}
+
+textbox {
+    text-color:                  inherit;
+    background-color:            inherit;
+    vertical-align:              0.5;
+    horizontal-align:            0.5;
+}

@@ -1,0 +1,73 @@
+/**
+ * Generic rofi dmenu list theme — standalone, no wallbash.
+ * Used by keybind-hint, and future dmenu-style pickers (clipboard, emoji…).
+ */
+
+configuration {
+    modi:                        "dmenu";
+    show-icons:                  false;
+    font:                        "JetBrainsMono Nerd Font Mono 11";
+}
+
+@theme "~/.config/rofi/theme.rasi"
+
+window {
+    width:                       45em;
+    height:                      32em;
+    transparency:                "real";
+    border:                      2px;
+    border-radius:               16px;
+    border-color:                @main-br;
+    background-color:            @main-bg;
+}
+mainbox {
+    background-color:            transparent;
+    children:                    [ "inputbar" , "listview" ];
+}
+inputbar {
+    padding:                     0.6em 1em;
+    background-color:            transparent;
+    children:                    [ "entry" ];
+}
+entry {
+    placeholder:                 "Rechercher…";
+    placeholder-color:           @main-fg;
+    text-color:                  @main-fg;
+    background-color:            @main-bg-solid;
+}
+listview {
+    padding:                     0.4em 0.8em;
+    lines:                       15;
+    columns:                     1;
+    scrollbar:                   false;
+    background-color:            transparent;
+    text-color:                  @main-fg;
+}
+element {
+    padding:                     0.4em 0.8em;
+    border-radius:               10px;
+    background-color:            transparent;
+    text-color:                  @main-fg;
+}
+/* rofi 2.0's dmenu mode alternates row backgrounds by default (normal/alternate).
+   These per-state selectors composite against an opaque backing canvas, not real
+   window transparency — a translucent color here washes out toward white, so we
+   use main-bg-solid (fully opaque) rather than main-bg. */
+element normal.normal, element normal.urgent, element normal.active,
+element alternate.normal, element alternate.urgent, element alternate.active {
+    border-radius:                10px;
+    background-color:            @main-bg-solid;
+    text-color:                  @main-fg;
+}
+element selected.normal, element selected.urgent, element selected.active {
+    border-radius:                10px;
+    background-color:            @select-bg-solid;
+    text-color:                  @select-fg;
+}
+/* element-text/-icon default to "transparent"/inherit, which (like the states
+   above) doesn't actually composite transparently on this build — explicit
+   "inherit" here correctly picks up whichever state color the row resolved to. */
+element-text, element-icon {
+    background-color:            inherit;
+    text-color:                  inherit;
+}

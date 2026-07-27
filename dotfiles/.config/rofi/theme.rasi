@@ -1,0 +1,18 @@
+/* Tundra palette (https://github.com/Prof-Shiba/Tundra), lifted from its rofi.theme */
+* {
+    main-bg:            #132B4BF6;
+    /* Fully opaque version of main-bg. Rofi composites per-state row/entry
+       widgets (element normal/alternate, entry) against an opaque white
+       backing canvas rather than real window transparency — a translucent
+       color there washes out toward white instead of blending with the
+       window behind it. Use this (not main-bg) for those widgets. */
+    main-bg-solid:      #132B4Bff;
+    main-fg:            #CCE2FFE6;
+    main-br:            #B68A95E6;
+    main-ex:            #625479E6;
+    select-bg:          #B68A95E6;
+    select-bg-solid:    #B68A95ff;
+    select-fg:          #523629E6;
+    separatorcolor:     transparent;
+    border-color:       transparent;
+}

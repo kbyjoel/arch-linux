@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Fond d'écran DIFFÉRENT PAR WORKSPACE via swww.
+#
+# Principe : swww-daemon dessine le fond ; ce script écoute les changements de
+# workspace de Hyprland (socket2) et, à chaque bascule, envoie à swww l'image
+# associée au workspace courant.
+#
+# Convention (dossier ~/.config/wallpapers/, symlinké depuis le repo) :
+#   <N>.jpg|jpeg|png|webp   -> image du workspace N (ex. 1.jpg, 2.png…)
+#   default.jpg|…           -> repli pour tout workspace sans image dédiée
+# Pour ajouter/changer un fond : dépose un fichier nommé d'après le numéro de
+# workspace dans ce dossier — aucune autre config à toucher.
+#
+# Lancé au démarrage par hyprland.lua (hl.on("hyprland.start", …)).
+
+set -euo pipefail
+
+WALL_DIR="$HOME/.config/wallpapers"
+EXTS=(jpg jpeg png webp)
+
+# swww est distribué sous le nom `awww` dans les dépôts Arch (fork renommé, même
+# CLI). On prend le premier binaire présent pour rester portable.
+BIN="$(command -v swww || command -v awww || true)"
+DAEMON="$(command -v swww-daemon || command -v awww-daemon || true)"
+if [[ -z "$BIN" || -z "$DAEMON" ]]; then
+    echo "wallpaper-daemon: ni swww ni awww installé — abandon." >&2
+    exit 1
+fi
+
+# Singleton : si une instance tourne déjà (ex. après `hyprctl reload`), on sort.
+# flock (util-linux) est toujours présent ; le verrou est libéré à la mort.
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/wallpaper-daemon.lock"
+flock -n 9 || exit 0
+
+# Retourne le chemin de l'image pour le workspace $1 (dédiée sinon default).
+resolve() {
+    local ws="$1" ext
+    for ext in "${EXTS[@]}"; do
+        [[ -f "$WALL_DIR/$ws.$ext" ]] && { printf '%s\n' "$WALL_DIR/$ws.$ext"; return; }
+    done
+    for ext in "${EXTS[@]}"; do
+        [[ -f "$WALL_DIR/default.$ext" ]] && { printf '%s\n' "$WALL_DIR/default.$ext"; return; }
+    done
+    return 1
+}
+
+# Applique le fond du workspace $1. On mémorise la dernière image posée pour ne
+# pas relancer une transition quand deux workspaces partagent le même fond
+# (ex. tous sur default) — évite un clignotement inutile.
+LAST=""
+set_wall() {
+    local img
+    img="$(resolve "$1")" || return 0        # aucun fichier -> on ne touche à rien
+    [[ "$img" == "$LAST" ]] && return 0
+    LAST="$img"
+    "$BIN" img "$img" \
+        --transition-type fade \
+        --transition-duration 0.6 \
+        --transition-fps 60 2>/dev/null || true
+}
+
+# Démarre le daemon s'il ne tourne pas déjà, puis attend qu'il réponde.
+if ! "$BIN" query >/dev/null 2>&1; then
+    "$DAEMON" >/dev/null 2>&1 &
+    for _ in $(seq 1 50); do
+        "$BIN" query >/dev/null 2>&1 && break
+        sleep 0.1
+    done
+fi
+
+# Fond initial = workspace actif au lancement. `hyprctl activeworkspace` (texte,
+# pas de jq requis) : « workspace ID <N> (<nom>) on monitor … » -> champ 3.
+set_wall "$(hyprctl activeworkspace 2>/dev/null | awk '/^workspace ID/{print $3; exit}')"
+
+# Écoute les événements. socket2 émet une ligne par event ; on ne réagit qu'aux
+# bascules de workspace. `workspacev2>><ID>,<nom>` -> on extrait l'ID.
+SIG="${HYPRLAND_INSTANCE_SIGNATURE:?HYPRLAND_INSTANCE_SIGNATURE manquant}"
+SOCK="${XDG_RUNTIME_DIR}/hypr/$SIG/.socket2.sock"
+socat -U - "UNIX-CONNECT:$SOCK" | while IFS= read -r line; do
+    case "$line" in
+        workspacev2\>\>*)
+            ws="${line#workspacev2>>}"
+            set_wall "${ws%%,*}"
+            ;;
+    esac
+done

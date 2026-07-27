@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Lance wlogout avec le thème adapté de HyDE (standalone, sans hyde-shell).
+# Toggle : referme wlogout s'il est déjà ouvert.
+# Les marges/tailles sont calculées depuis le moniteur focalisé puis injectées
+# dans la CSS (template avec ${variables}) via envsubst.
+
+set -euo pipefail
+
+if pgrep -x wlogout >/dev/null 2>&1; then
+  pkill -x wlogout
+  exit 0
+fi
+
+conf="$HOME/.config/wlogout"
+layout="$conf/layout_1"
+template="$conf/style.css"
+
+# Hauteur + échelle du moniteur focalisé (parsing texte, sans jq)
+read -r y_mon scale < <(hyprctl monitors | awk '
+    /^Monitor/            { h=""; s="" }
+    /^[ \t]+[0-9]+x[0-9]+@/ { res=$1; sub(/@.*/, "", res); split(res, d, "x"); h=d[2] }
+    /^[ \t]+scale:/       { s=$2 }
+    /focused: yes/        { print h, s; exit }
+')
+scale="${scale/./}" # 1.00 -> 100
+[[ "$y_mon" =~ ^[0-9]+$ ]] || y_mon=1080
+[[ "$scale" =~ ^[0-9]+$ ]] || scale=100
+
+export BtnCol="white" # icônes blanches (fond sombre)
+export fntSize=$((y_mon * 2 / 100))
+export mgn=$((y_mon * 28 / scale))
+# hvr = marge au survol ; plus il est proche de mgn, moins le bouton grossit.
+# Écart mgn-hvr = 3 -> croissance ~32 px/côté sur 1080p (mets 26 pour ~22 px).
+export hvr=$((y_mon * 26 / scale))
+export active_rad=50
+export button_rad=80
+
+css="$(envsubst '$HOME $BtnCol $fntSize $mgn $hvr $active_rad $button_rad' <"$template")"
+exec wlogout -b 5 -c 0 -r 0 -m 0 --layout "$layout" --css <(printf '%s' "$css") --protocol layer-shell

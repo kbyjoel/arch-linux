@@ -1,0 +1,49 @@
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+ "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+<!--
+  Menu XDG des applications : le chainon manquant des associations de fichiers
+  sous Hyprland.
+
+  ATTENTION : ceci est un commentaire XML, il ne doit contenir aucun double
+  tiret (interdit par la norme XML). Un double tiret glissé ici rend le fichier
+  invalide, le parseur de menu le rejette en silence, et on retombe pile sur le
+  bug que ce fichier corrige. Les commandes ci-dessous omettent donc leurs
+  drapeaux (voir README.md pour les versions completes).
+
+  POURQUOI CE FICHIER EXISTE :
+  KDE (Dolphin) ne resout le programme par defaut d'un type de fichier qu'a
+  partir de son cache de services « ksycoca ». kbuildsycoca ne recense les
+  .desktop comme services QUE s'il trouve un applications.menu listant les
+  repertoires d'applications (balises AppDir). Sur un systeme sans environnement
+  de bureau complet (Hyprland seul), ce fichier n'est fourni par AUCUN paquet
+  (pacman ne trouve aucun proprietaire de /etc/xdg/menus/applications.menu).
+  Resultat : ksycoca reste VIDE de services et Dolphin ignore TOUTES les
+  associations de ~/.config/mimeapps.list ; il redemande l'appli a chaque
+  double-clic, PDF comme image, alors meme que `xdg-mime query default` repond
+  correctement (glib et KDE ne lisent pas le meme cache).
+
+  Diagnostic (reproductible) : lancer kbuildsycoca en mode noincremental avec
+  QT_FORCE_STDERR_LOGGING=1 et QT_LOGGING_RULES sur kf.service, puis compter les
+  lignes « specifies unknown service ». Sans ce menu : une pluie de warnings, y
+  compris pour des apps de /usr/share (google-chrome.desktop). Avec : zero.
+
+  CE QUE FAIT CE MENU :
+  DefaultAppDirs deplie tous les repertoires d'applications XDG standard
+  (~/.local/share/applications, /usr/share/applications, etc.) et Include/All y
+  inclut toutes les entrees. On ne cherche pas a batir une arborescence de menu
+  utilisable (aucun lanceur ne la lit ici) : le seul but est que kbuildsycoca
+  voie les AppDir et peuple ksycoca. Depose en espace utilisateur
+  (~/.config/menus/), la ou kbuildsycoca le cherche, sans besoin de root.
+
+  install.sh reconstruit ksycoca apres avoir deploye ce fichier.
+-->
+<Menu>
+    <Name>Applications</Name>
+    <Directory>Applications.directory</Directory>
+    <DefaultAppDirs/>
+    <DefaultDirectoryDirs/>
+    <DefaultMergeDirs/>
+    <Include>
+        <All/>
+    </Include>
+</Menu>

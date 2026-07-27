@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""Standalone keybind cheatsheet.
+
+Lit la table de binds *live* de Hyprland via `hyprctl binds` (format texte) et
+l'affiche dans un rofi dmenu. Chaque bind porte sa propre `description` (définie
+dans keybindings.lua), donc la liste reste synchronisée toute seule.
+
+POURQUOI LE FORMAT TEXTE ET PAS `-j` : sous Hyprland 0.56 (config Lua native,
+binds `__lua`), `hyprctl binds -j` produit du JSON INVALIDE — champs décalés et
+valeurs non quotées (`"keycode": Q`, description en clair dans un autre champ),
+si bien que `json.loads` refuse tout. La sortie texte, elle, est propre (autre
+chemin de sérialisation). On la parse donc directement ; ça reste correct même
+si une version future répare le `-j`. (Symptôme : SUPER+K « ne faisait rien »
+parce que ce script plantait sur le JSON, alors que le bind lui-même est bon.)
+
+Read-only : contrairement au keybinds_hint.sh de HyDE, sélectionner une entrée
+ne l'exécute pas (les binds Lua n'exposent qu'un callback opaque `__lua`).
+Échap ou une sélection ferment simplement le menu.
+"""
+import pathlib
+import subprocess
+
+MOD_BITS = [
+    (64, "SUPER"),
+    (8, "ALT"),
+    (4, "CTRL"),
+    (1, "SHIFT"),
+]
+
+THEME = pathlib.Path.home() / ".config/rofi/dmenu.rasi"
+
+# Rangée des chiffres. Les workspaces sont bindés par KEYCODE (code:10..19) pour
+# rester indépendants de la disposition AZERTY/QWERTY — voir keybindings.lua. On
+# réaffiche ici le chiffre imprimé sur la touche : « SUPER+1 » plutôt que
+# « SUPER+code:10 », plus parlant dans l'aide. keycode 10 = « 1 » … 19 = « 0 ».
+NUMROW = {f"code:{9 + n}": str(n % 10) for n in range(1, 11)}
+
+
+def parse_binds(text):
+    """Découpe la sortie de `hyprctl binds` en une liste de dicts.
+
+    Chaque bind est un bloc : une ligne d'en-tête sans indentation (`bind`,
+    `bindd`, `bindm`, `bindld`…) suivie de lignes « \\tclé: valeur ».
+    """
+    binds = []
+    cur = None
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        if not line[0].isspace():          # ligne d'en-tête -> nouveau bind
+            cur = {"_type": line.strip()}
+            binds.append(cur)
+        elif cur is not None and ":" in line:
+            key, _, val = line.strip().partition(":")
+            cur[key.strip()] = val.strip()
+    return binds
+
+
+def mod_string(modmask):
+    return "+".join(name for bit, name in MOD_BITS if modmask & bit)
+
+
+def key_string(bind):
+    key = (bind.get("key") or "").strip()
+    keycode = bind.get("keycode") or "0"
+
+    # Cas particulier : certains binds Lua (workspaces reliés par KEYCODE, ex.
+    # `code:10`) stockent le combo COMPLET dans `key` — « SUPER + code:10 » —
+    # tout en remplissant aussi modmask. On prend alors `key` tel quel pour ne
+    # pas dupliquer les modificateurs.
+    if "+" in key:
+        combo = key.replace(" + ", "+")
+    else:
+        if not key and keycode != "0":
+            key = f"code:{keycode}"
+        try:
+            modmask = int(bind.get("modmask", 0))
+        except ValueError:
+            modmask = 0
+        combo = "+".join(p for p in (mod_string(modmask), key) if p)
+
+    for code, digit in NUMROW.items():        # code:10 -> 1 … code:19 -> 0
+        combo = combo.replace(code, digit)
+    return f"[souris] {combo}" if "mouse" in key else combo
+
+
+def main():
+    # toggle : si l'aide est déjà ouverte, ceci la referme
+    if subprocess.run(["pkill", "-x", "rofi"], check=False).returncode == 0:
+        return
+
+    proc = subprocess.run(
+        ["hyprctl", "binds"], capture_output=True, text=True, check=True
+    )
+    binds = parse_binds(proc.stdout)
+
+    lines = []
+    for b in binds:
+        desc = (b.get("description") or "").strip()
+        if not desc:
+            continue
+        lines.append(f"{key_string(b):<28}\t{desc}")
+
+    if not lines:
+        subprocess.run(
+            ["notify-send", "Keybinds", "Aucune description trouvée."], check=False
+        )
+        return
+
+    subprocess.run(
+        ["rofi", "-dmenu", "-i", "-p", "Raccourcis", "-theme", str(THEME)],
+        input="\n".join(sorted(lines)),
+        text=True,
+        check=False,
+    )
+
+
+if __name__ == "__main__":
+    main()

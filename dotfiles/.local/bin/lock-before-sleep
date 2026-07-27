@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Verrouille la session AVANT la mise en veille, et ne rend la main qu'une fois
+# le verrou réellement affiché.
+#
+# Appelé par le before_sleep_cmd de ~/.config/hypr/hypridle.conf.
+#
+# Pourquoi ce script plutôt qu'un simple `loginctl lock-session` :
+# cette commande se contente d'émettre un signal D-Bus et rend la main tout de
+# suite. hypridle relâche alors son inhibiteur de veille, et le verrouillage
+# (signal Lock -> lock_cmd -> screenlock -> mpvpaper + hyprlock) démarre en
+# parallèle de la veille. systemd gèle `user.slice` pendant la suspension : le
+# verrou se retrouve figé à mi-démarrage et ne s'affiche qu'au dégel, une à deux
+# secondes APRÈS le réveil — pendant lesquelles le bureau est visible.
+#
+# En bloquant ici, on garde l'inhibiteur « delay » de hypridle actif, et logind
+# attend que le verrou soit à l'écran avant de suspendre.
+
+# Pas de `set -e` : ce script ne doit JAMAIS échouer au point d'empêcher la
+# veille. En cas de souci on laisse partir la machine plutôt que de la bloquer
+# le couvercle fermé.
+set -uo pipefail
+
+loginctl lock-session
+
+# Attente bornée : logind plafonne les inhibiteurs « delay » à
+# InhibitDelayMaxSec (5 s par défaut). Au-delà il suspend quoi qu'il arrive, donc
+# inutile d'attendre plus — on reste sous les 5 s avec de la marge.
+#
+# On guette hyprlock et non mpvpaper : `screenlock` lance la vidéo en premier,
+# donc voir hyprlock signifie que mpvpaper est déjà parti. Si la vidéo échoue,
+# hyprlock reste affiché sur fond noir et la session est protégée quand même.
+for _ in $(seq 40); do
+    if pgrep -x hyprlock >/dev/null 2>&1; then
+        # Le processus existe : on laisse une poignée de frames se dessiner
+        # (hyprlock + première image de la vidéo) avant d'autoriser la veille.
+        sleep 0.6
+        exit 0
+    fi
+    sleep 0.1
+done
+
+# Délai dépassé : on n'a pas pu confirmer l'affichage du verrou. On sort quand
+# même — mieux vaut une veille avec un verrou incertain qu'un portable qui
+# refuse de s'endormir dans un sac.
+exit 0

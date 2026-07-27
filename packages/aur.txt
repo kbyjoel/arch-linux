@@ -1,0 +1,18 @@
+# Paquets de l'AUR (installés via yay).
+# Une entrée par ligne. Les lignes vides et commentaires (#) sont ignorés.
+
+wlogout
+google-chrome
+spotify
+
+# teams-for-linux : client Microsoft Teams (Electron). Classe de fenêtre
+# « teams-for-linux » — voir la règle de workspace dans hypr/userprefs.lua.
+teams-for-linux
+
+# fzf-tab : remplace le menu de complétion Tab de zsh par une UI fzf.
+# Sourcé par .zshrc depuis /usr/share/zsh/plugins/fzf-tab/.
+fzf-tab-git
+
+# Fond d'écran vidéo — utilisé par le script `screenlock` pour jouer cat.mp4
+# (la vidéo du login SDDM) en fond animé du verrou hyprlock.
+mpvpaper

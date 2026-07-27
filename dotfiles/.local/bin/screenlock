@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Verrouille la session avec la VIDÉO du chat (celle du login SDDM) en fond animé.
+#
+# Astuce (cf. github.com/Jack02134x/hyprlock-mp4-guide) : hyprlock ne sait pas
+# lire de vidéo, alors on affiche cat.mp4 avec mpvpaper sur la couche "overlay",
+# et on rend hyprlock transparent (background color alpha 0 dans hyprlock.conf
+# + misc:session_lock_xray = true côté Hyprland) pour voir la vidéo au travers.
+# mpvpaper est arrêté au déverrouillage.
+#
+# Appelé par le bouton « Verrouiller » de wlogout et par SUPER+L.
+#
+# LIMITE CONNUE ET ASSUMÉE — une à deux secondes pendant lesquelles le bureau
+# reste visible sous l'horloge, au verrouillage comme au réveil de veille.
+# hyprlock s'affiche tout de suite ; mpvpaper, lui, met ce temps à monter (au
+# réveil : à être dégelé et à redessiner). Or le verrou étant transparent, tant
+# que mpvpaper n'a rien dessiné, xray laisse voir les fenêtres.
+#
+# Tentatives faites, pour ne pas les refaire :
+#   - Retenir la veille jusqu'à l'affichage du verrou (lock-before-sleep) :
+#     utile, mais sans effet ici — hyprlock était déjà à l'écran, le problème
+#     n'a jamais été le verrou.
+#   - Glisser un aplat #F04F61 (couleur de fond de la vidéo) sous celle-ci pour
+#     boucher le trou. Deux échecs successifs : sur la couche « top » il est
+#     rendu mais invisible, car xray ne laisse traverser qu'« overlay » (waybar
+#     vit sur top et ne se voit pas non plus au travers) ; et sur « overlay », il
+#     passe DEVANT la vidéo — l'ordre de création ne détermine pas l'empilement.
+#     Surtout, l'aplat mettait lui aussi une à deux secondes à apparaître : le
+#     délai vient du démarrage de mpvpaper, pas du décodage vidéo. Aucune
+#     surface mpvpaper ne sera là à temps, quel que soit son contenu.
+#
+# Le seul correctif réel serait un fond opaque dans hyprlock.conf avec
+# session_lock_xray = false — au prix de l'animation. Choix assumé de garder
+# la vidéo.
+
+set -euo pipefail
+
+VIDEO="/usr/share/sddm/themes/silent/backgrounds/cat.mp4"
+
+# Déjà verrouillé ? on ne relance rien (évite d'empiler mpvpaper/hyprlock).
+pgrep -x hyprlock >/dev/null 2>&1 && exit 0
+
+# Filet de sécurité : quoi qu'il arrive (unlock, hyprlock qui plante, Ctrl-C),
+# on tue les mpvpaper lancés pour ne pas laisser une vidéo tourner en fond.
+cleanup() { pkill -x mpvpaper 2>/dev/null || true; }
+trap cleanup EXIT
+
+# Une instance mpvpaper par écran connecté. On parse `hyprctl monitors` en awk
+# (lignes « Monitor <nom> (ID n): ») pour ne dépendre ni de jq ni d'un moniteur
+# codé en dur.
+if [[ -f "$VIDEO" ]] && command -v mpvpaper >/dev/null 2>&1; then
+    while IFS= read -r mon; do
+        [[ -n "$mon" ]] && mpvpaper -o "no-audio loop-file=inf" --layer overlay "$mon" "$VIDEO" &
+    done < <(hyprctl monitors | awk '/^Monitor/{print $2}')
+fi
+
+# Verrou (bloquant jusqu'au déverrouillage). Si mpvpaper n'a pas pu démarrer,
+# hyprlock reste utilisable sur fond noir — la session est protégée quand même.
+hyprlock

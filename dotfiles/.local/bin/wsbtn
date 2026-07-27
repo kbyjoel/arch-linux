@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Bouton d'UN workspace pour waybar (modules custom/wsN). Argument : le numéro.
+#
+# Sort du JSON {text,class} consommé par waybar (return-type json) :
+#   active   -> workspace courant
+#   occupied -> workspace existant (a des fenêtres)
+#   empty    -> workspace persistant (<= PERSISTENT) mais vide : toujours affiché
+# Un workspace > PERSISTENT et inutilisé ne sort RIEN -> le module se masque.
+#
+# Utilisé avec "signal":1 : rafraîchi par SIGRTMIN+1, émis par waybar-ws-refresh
+# à chaque changement de workspace. Pas de jq (absent) : on parse en awk.
+
+set -euo pipefail
+
+n="${1:?usage: wsbtn <numéro>}"
+PERSISTENT=6
+
+active="$(hyprctl activeworkspace 2>/dev/null | awk '/^workspace ID/{print $3; exit}')"
+if [[ "$n" == "$active" ]]; then
+    printf '{"text":"%s","class":["wsbtn","active"]}\n' "$n"
+    exit 0
+fi
+
+# `hyprctl workspaces` ne liste que les workspaces existants (= non vides).
+if hyprctl workspaces 2>/dev/null | awk '/^workspace ID/{print $3}' | grep -qx "$n"; then
+    printf '{"text":"%s","class":["wsbtn","occupied"]}\n' "$n"
+    exit 0
+fi
+
+if (( n <= PERSISTENT )); then
+    printf '{"text":"%s","class":["wsbtn","empty"]}\n' "$n"
+    exit 0
+fi
+
+# > PERSISTENT et vide : sortie vide -> waybar masque le module.
+echo

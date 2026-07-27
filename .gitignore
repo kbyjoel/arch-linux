@@ -1,0 +1,8 @@
+# Sauvegardes créées par install.sh
+*.bak
+
+# Sauvegardes locales de configs (ex. ancien prompt starship avant bascule)
+backups/
+
+# Divers
+.DS_Store

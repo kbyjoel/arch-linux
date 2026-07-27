@@ -1,0 +1,290 @@
+{
+  "layer": "top",
+  "modules-left": [
+    "group/workspaces",
+    "group/media"
+  ],
+  "modules-center": [
+    "clock"
+  ],
+  "modules-right": [
+    "custom/updates",
+    "custom/keybinds",
+    "hyprland/submap",
+    "group/volume",
+    "battery",
+    "bluetooth",
+    "network",
+    "cpu",
+    "memory",
+    "custom/power"
+  ],
+  // Workspaces : modules custom (un par numéro) au lieu du module
+  // hyprland/workspaces intégré. Nécessaire car ce Hyprland lit une config
+  // Lua native -> l'IPC `dispatch` est évalué en Lua, et le clic figé du
+  // module intégré (`dispatch workspace N`) échoue. Chaque bouton clique donc
+  // avec la bonne syntaxe `hl.dsp.focus{workspace=N}`. 1-4 sont persistants
+  // (toujours affichés) ; 5-10 apparaissent à l'usage. Le script `wsbtn`
+  // décide texte/classe ; `waybar-ws-refresh` envoie SIGRTMIN+1 (signal 1)
+  // à chaque changement pour rafraîchir la surbrillance sans polling.
+  "group/workspaces": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/ws1",
+      "custom/ws2",
+      "custom/ws3",
+      "custom/ws4",
+      "custom/ws5",
+      "custom/ws6",
+      "custom/ws7",
+      "custom/ws8",
+      "custom/ws9",
+      "custom/ws10"
+    ]
+  },
+  "custom/ws1": {
+    "exec": "wsbtn 1",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=1}'",
+    "tooltip": false
+  },
+  "custom/ws2": {
+    "exec": "wsbtn 2",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=2}'",
+    "tooltip": false
+  },
+  "custom/ws3": {
+    "exec": "wsbtn 3",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=3}'",
+    "tooltip": false
+  },
+  "custom/ws4": {
+    "exec": "wsbtn 4",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=4}'",
+    "tooltip": false
+  },
+  "custom/ws5": {
+    "exec": "wsbtn 5",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=5}'",
+    "tooltip": false
+  },
+  "custom/ws6": {
+    "exec": "wsbtn 6",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=6}'",
+    "tooltip": false
+  },
+  "custom/ws7": {
+    "exec": "wsbtn 7",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=7}'",
+    "tooltip": false
+  },
+  "custom/ws8": {
+    "exec": "wsbtn 8",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=8}'",
+    "tooltip": false
+  },
+  "custom/ws9": {
+    "exec": "wsbtn 9",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=9}'",
+    "tooltip": false
+  },
+  "custom/ws10": {
+    "exec": "wsbtn 10",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 1,
+    "format": "{}",
+    "on-click": "hyprctl dispatch 'hl.dsp.focus{workspace=10}'",
+    "tooltip": false
+  },
+  "custom/updates": {
+    "exec": "system-update",
+    "return-type": "json",
+    "format": "{}",
+    "on-click": "system-update up",
+    "interval": 86400,
+    "signal": 20
+  },
+  "hyprland/window": {
+    "max-length": 50
+  },
+  "custom/keybinds": {
+    "format": "",
+    "tooltip-format": "Aide-mémoire des raccourcis (SUPER+K)",
+    "on-click": "keybind-hint"
+  },
+  "custom/power": {
+    "format": "",
+    "tooltip-format": "Menu de déconnexion",
+    "on-click": "wlogout-launch"
+  },
+  "battery": {
+    "interval": 20,
+    "format": "{capacity}% {icon}",
+    "format-icons": {
+      "default": [
+        "󰂎",
+        "󰁺",
+        "󰁻",
+        "󰁼",
+        "󰁽",
+        "󰁾",
+        "󰁿",
+        "󰂀",
+        "󰂁",
+        "󰂂",
+        "󰁹"
+      ],
+      "charging": [
+        "󰢟",
+        "󰢜",
+        "󰂆",
+        "󰂇",
+        "󰂈",
+        "󰢝",
+        "󰂉",
+        "󰢞",
+        "󰂊",
+        "󰂋",
+        "󰂅"
+      ]
+    },
+    "tooltip-format": "Batterie : {capacity}%",
+    "tooltip-format-charging": "En charge : {capacity}% (complète dans {time})",
+    "tooltip-format-discharging": "Sur batterie : {capacity}% (encore {time})",
+    "tooltip-format-full": "Batterie chargée : {capacity}%",
+    "tooltip-format-not-charging": "Branchée, en pause : {capacity}%",
+  },
+  "bluetooth": {
+    "format": "",
+    "format-disabled": "", // an empty format will hide the module
+    "format-connected": " {num_connections}",
+    "tooltip-format": "{controller_alias}\t{controller_address}",
+    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+    "on-click": "exec kitty --title=bluetui bluetui"
+  },
+  "cpu": {
+    "interval": 10,
+    "format": " {}%",
+    "max-length": 10,
+    "on-click": "exec kitty --title=btop btop"
+  },
+  "memory": {
+    "interval": 30,
+    "format": " {percentage}%",
+    "tooltip-format": "{used:0.1f}G/{total:0.1f}G used",
+    "on-click": "exec kitty --title=htop htop",
+  },
+  "network": {
+    "format": "",
+    "format-wifi": "",
+    "format-ethernet": "",
+    "format-disconnected": "󰤭", //An empty format will hide the module.
+    "tooltip-format": "{ifname} via {gwaddr} 󰊗",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
+    "tooltip-format-ethernet": "{ifname} ",
+    "tooltip-format-disconnected": "󰖪",
+    "max-length": 50,
+    "on-click": "exec kitty --title=nmtui nmtui",
+  },
+  "clock": {
+    "format": "󰥔 {:L%a %d. %b %H:%M}",
+    "locale": "fr_FR.utf8",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    "calendar": {
+      "format": {
+        "today": "<span color='#75f1fa'><b>{}</b></span>"
+      }
+    },
+    "on-click": "exec chromium --app=https://calendar.google.com"
+  },
+  "pulseaudio": {
+    "format": "{volume}% {icon}",
+    "format-muted": "",
+    "format-icons": {
+      "default": [
+        "",
+        ""
+      ]
+    },
+    "scroll-step": 1,
+    "ignored-sinks": [
+      "Easy Effects Sink"
+    ],
+    "on-click": "pavucontrol",
+  },
+  "pulseaudio/slider": {
+    "min": 0,
+    "max": 100,
+    "orientation": "horizontal"
+  },
+  "group/volume": {
+    "orientation": "horizontal",
+    "modules": [
+      "pulseaudio",
+      "pulseaudio/slider"
+    ]
+  },
+  "group/media": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/media-animation",
+      "custom/media-now-playing",
+      "custom/media-time"
+    ]
+  },
+  "custom/media-now-playing": {
+    "exec": "~/.config/waybar/custom_modules/media/media-now-playing.sh",
+    "escape": true,
+    "tooltip": false,
+    "on-click": "playerctl play-pause",
+    "on-click-middle": "playerctl previous",
+    "on-click-right": "playerctl next",
+  },
+  "custom/media-animation": {
+    "exec": "~/.config/waybar/custom_modules/media/media-animation.sh",
+    "tooltip": false,
+  },
+  "custom/media-time": {
+    "exec": "~/.config/waybar/custom_modules/media/media-time.sh",
+    "escape": true,
+    "interval": 1,
+    "tooltip": false,
+  }
+}

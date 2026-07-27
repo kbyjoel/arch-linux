@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Rafraîchit les boutons de workspace de waybar (modules custom/wsN) à chaque
+# changement côté Hyprland. Envoie SIGRTMIN+1, que ces modules écoutent via
+# "signal": 1. Écoute la socket2 de Hyprland (même mécanisme que wallpaper-daemon
+# et screenlock). Lancé au démarrage par hyprland.lua.
+#
+# Nécessaire car ce Hyprland lit une config Lua native : l'IPC `dispatch` est
+# évalué en Lua, donc le clic intégré de waybar (`dispatch workspace N`, syntaxe
+# figée) échoue. Les modules custom cliquent avec la bonne syntaxe et cet
+# écouteur garde leur surbrillance synchro sans polling.
+
+set -euo pipefail
+
+# Singleton : évite d'empiler les écouteurs après un `hyprctl reload`.
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/waybar-ws-refresh.lock"
+flock -n 9 || exit 0
+
+refresh() { pkill -RTMIN+1 waybar 2>/dev/null || true; }
+
+SIG="${HYPRLAND_INSTANCE_SIGNATURE:?HYPRLAND_INSTANCE_SIGNATURE manquant}"
+SOCK="${XDG_RUNTIME_DIR}/hypr/$SIG/.socket2.sock"
+
+refresh   # état initial au démarrage
+
+# On ne réagit qu'aux événements qui changent l'ensemble ou l'actif des
+# workspaces (bascule, création/destruction, fenêtre déplacée, moniteur).
+socat -U - "UNIX-CONNECT:$SOCK" | while IFS= read -r line; do
+    case "$line" in
+        workspace\>\>*|workspacev2\>\>*|createworkspace*|destroyworkspace*|moveworkspace*|focusedmon\>\>*|openwindow\>\>*|closewindow\>\>*)
+            refresh
+            ;;
+    esac
+done

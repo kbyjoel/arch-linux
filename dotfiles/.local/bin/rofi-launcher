@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Standalone rofi app launcher — adapted from HyDE's rofilaunch.sh, no hyde-shell dependency.
+# Theme: ~/.config/rofi/launcher.rasi (layout) + ~/.config/rofi/theme.rasi (colors)
+
+pkill -x rofi && exit 0
+
+theme="$HOME/.config/rofi/launcher.rasi"
+
+mode="drun"
+case "$1" in
+    d | --drun) mode="drun" ;;
+    w | --window) mode="window" ;;
+    f | --filebrowser) mode="filebrowser" ;;
+    r | --run) mode="run" ;;
+    h | --help)
+        echo "Usage: $(basename "$0") [d|w|f|r]"
+        echo "  d  drun mode (default)"
+        echo "  w  window mode"
+        echo "  f  filebrowser mode"
+        echo "  r  run mode"
+        exit 0
+        ;;
+esac
+
+exec rofi -show "$mode" -theme "$theme"

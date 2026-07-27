@@ -1,0 +1,107 @@
+# Paquets des dépôts officiels (pacman).
+# Une entrée par ligne. Les lignes vides et commentaires (#) sont ignorés.
+
+# --- Hyprland & session ---
+hyprland
+hyprlock
+# hypridle : démon qui écoute logind. Sert ici uniquement aux hooks de veille
+# (verrouiller avant de suspendre, cf. hypr/hypridle.conf) — aucun verrouillage
+# sur inactivité n'est configuré.
+hypridle
+hyprpicker
+xdg-desktop-portal-hyprland
+hyprpolkitagent
+qt5-wayland
+qt6-wayland
+
+# --- Connexion (SDDM + dépendances runtime du thème silent vendorisé) ---
+# Le thème silent est vendorisé dans assets/sddm/ (déployé par install.sh),
+# on n'installe donc pas le paquet AUR sddm-silent-theme, mais il faut ses
+# dépendances pour que le thème s'affiche (SVG, clavier virtuel, polices…).
+sddm
+qt6-svg
+qt6-virtualkeyboard
+qt6-multimedia-ffmpeg
+qt6-declarative
+qt6-imageformats
+redhat-fonts
+
+# --- Barre / lanceur / notifications ---
+waybar
+rofi
+# mako : daemon de notifications (Wayland natif). Démarré automatiquement par
+# activation D-Bus (org.freedesktop.Notifications) ; thème dans
+# dotfiles/.config/mako/config. (Remplace dunst, qui n'était pas utilisé.)
+mako
+
+# --- Terminaux ---
+kitty
+ghostty
+
+# --- Captures d'écran / presse-papiers ---
+grim
+slurp
+wl-clipboard
+cliphist
+
+# --- Audio / luminosité / média ---
+wireplumber
+pavucontrol
+brightnessctl
+playerctl
+
+# --- Shell (zsh + plugins) ---
+# zsh-autosuggestions : suggestions grisées à la frappe.
+# zsh-syntax-highlighting : coloration de la ligne de commande.
+# zsh-completions : définitions de complétion supplémentaires.
+# Sourcés par ~/.zshrc ; le shell par défaut est basculé sur zsh par install.sh.
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+zsh-completions
+# fzf : sélecteur flou. Intègre Ctrl+R (historique), Ctrl+T (fichiers),
+# Alt+C (cd) dans zsh (voir .zshrc). Complété par fzf-tab-git (AUR).
+fzf
+
+# --- Système / infos ---
+pacman-contrib
+btop
+htop
+jq
+fastfetch
+starship
+
+# --- Réseau / bluetooth ---
+nm-connection-editor
+bluetui
+
+# --- Éditeur / dev (Neovim + LazyVim) ---
+neovim
+ripgrep
+fd
+lazygit
+# zoxide : cd intelligent dans le shell. Sa base de données sert aussi de source
+# au picker de projets de LazyVim (<leader>fp).
+zoxide
+
+# --- Conteneurs ---
+docker
+docker-compose
+docker-buildx
+
+# --- Fichiers ---
+dolphin
+# imv : visionneuse d'images Wayland minimaliste, associée aux types image/*
+# dans .config/mimeapps.list (double-clic depuis Dolphin). Volontairement
+# légère : gwenview, l'équivalent KDE, tirerait qt6-webengine (~500 Mio).
+imv
+
+# --- Fond d'écran ---
+# awww : daemon de wallpaper (fork de swww, distribué sous ce nom dans les
+# dépôts Arch ; binaires awww/awww-daemon, CLI identique à swww). socat : lecture
+# de la socket2 Hyprland par wallpaper-daemon (fond différent par workspace).
+awww
+socat
+
+# --- Polices ---
+ttf-jetbrains-mono-nerd

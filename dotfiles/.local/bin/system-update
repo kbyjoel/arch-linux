@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Standalone package-update checker for waybar (adapted from HyDE's system.update.sh).
+# No hyde-shell dependency. Requires: pacman-contrib (checkupdates), yay (AUR).
+#
+# Icons are emitted via `printf '\U....'` (explicit codepoint) rather than literal
+# characters pasted in the file, to avoid silently losing Nerd Font glyphs on edit.
+
+set -uo pipefail
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+mkdir -p "$cache_dir"
+info_file="$cache_dir/updates_info"
+
+ICON_UPDATE=$(printf '\U000f0baf')   # 󰮯 update available
+ICON_OK=$(printf '\U000f058')        # some fonts want 4 hex digits; see below
+ICON_OFFICIAL=$(printf '\U000f14fd') # 󱓽 official repos
+ICON_AUR=$(printf '\U000f14fe')      # 󱓾 AUR
+
+if [[ "${1:-}" == "up" ]]; then
+    if [[ -f "$info_file" ]]; then
+        # shellcheck source=/dev/null
+        source "$info_file"
+        trap 'pkill -RTMIN+20 waybar' EXIT
+        command="printf '[Officiel] %-10s\n[AUR]      %-10s\n' '${OFFICIAL_UPDATES:-0}' '${AUR_UPDATES:-0}'; yay -Syu; read -n 1 -p 'Appuyez sur une touche pour continuer...'"
+        kitty --title systemupdate sh -c "$command"
+    else
+        notify-send "Mises à jour" "Aucune info trouvée, relance sans argument d'abord."
+    fi
+    exit 0
+fi
+
+official=$(
+    temp_db=$(mktemp -u "${XDG_RUNTIME_DIR:-/tmp}/checkupdates_db_XXXXXX")
+    trap '[[ -f "$temp_db" ]] && rm -f "$temp_db"' EXIT INT TERM
+    CHECKUPDATES_DB="$temp_db" checkupdates 2>/dev/null | wc -l
+)
+aur=$(yay -Qua 2>/dev/null | wc -l)
+total=$((official + aur))
+
+{
+    echo "OFFICIAL_UPDATES=$official"
+    echo "AUR_UPDATES=$aur"
+} > "$info_file"
+
+if [[ $total -eq 0 ]]; then
+    echo "{\"text\":\"\", \"tooltip\":\"$ICON_OK Système à jour\"}"
+else
+    echo "{\"text\":\"$ICON_UPDATE $total\", \"tooltip\":\"$ICON_OFFICIAL Officiel $official\n$ICON_AUR AUR $aur\"}"
+fi

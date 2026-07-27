@@ -1,0 +1,38 @@
+# Surcharge de /usr/share/applications/imv.desktop (fourni par le paquet imv).
+#
+# POURQUOI : le fichier du paquet porte `NoDisplay=true`, ce qui retire l'entrée
+# des listes « Ouvrir avec » et empêche KDE de la retenir comme appli par
+# défaut. On la remet donc à false ici.
+#
+# NOTE : ce n'est que la SECONDE couche du problème. La cause première du « aucun
+# programme associé » dans Dolphin n'était pas NoDisplay mais l'absence de
+# ~/.config/menus/applications.menu, sans lequel ksycoca ne recense aucune appli
+# du tout (voir l'en-tête de ce menu et la section « Associations de fichiers »
+# du README). Cette surcharge ne sert qu'une fois ce menu en place.
+#
+# COMMENT : un .desktop de ~/.local/share/applications/ portant le même nom que
+# celui de /usr/share/applications/ le masque intégralement (XDG_DATA_HOME passe
+# avant XDG_DATA_DIRS). Ce n'est pas une fusion : le fichier doit être complet,
+# d'où la copie intégrale ci-dessous. Seul `NoDisplay` change.
+#
+# À RESYNCHRONISER si le paquet imv change son .desktop (nouveaux formats dans
+# MimeType, par exemple) :
+#     diff /usr/share/applications/imv.desktop ~/.local/share/applications/imv.desktop
+#
+# EFFET DE BORD ASSUMÉ : imv devient visible dans la liste d'applications du
+# lanceur rofi (mode drun), puisque c'est précisément ce que `NoDisplay` cachait.
+
+[Desktop Entry]
+Name=imv
+GenericName=Image viewer
+GenericName[en_US]=Image viewer
+Comment=Fast Image Viewer
+Exec=imv %F
+NoDisplay=false
+Terminal=false
+Type=Application
+Categories=Graphics;2DGraphics;Viewer;
+MimeType=image/x-farbfeld;image/tiff;image/tiff-fx;image/png;image/x-png;image/jpeg;image/jpg;image/pjpeg;image/svg+xml;image/gif;image/bmp;image/x-bmp;image/heif;image/avif;image/jxl;image/webp;image/qoi
+Name[en_US]=imv
+Icon=multimedia-photo-viewer
+Keywords=photo;picture;

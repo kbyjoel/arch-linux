@@ -1,0 +1,30 @@
+{
+    "label": "lock",
+    "action": "screenlock",
+    "text": "Verrouiller",
+    "keybind": "l"
+}
+{
+    "label": "logout",
+    "action": "uwsm stop",
+    "text": "Déconnexion",
+    "keybind": "e"
+}
+{
+    "label": "suspend",
+    "action": "screenlock & disown && systemctl suspend",
+    "text": "Veille",
+    "keybind": "u"
+}
+{
+    "label": "shutdown",
+    "action": "systemctl poweroff",
+    "text": "Éteindre",
+    "keybind": "s"
+}
+{
+    "label": "reboot",
+    "action": "systemctl reboot",
+    "text": "Redémarrer",
+    "keybind": "r"
+}

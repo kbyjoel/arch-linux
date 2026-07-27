@@ -1,0 +1,146 @@
+@define-color highlight rgba(117, 241, 250, 1);
+@define-color dark-9 rgba(24, 24, 27, 1);
+@define-color dark-8 rgba(39, 39, 42, 1);
+@define-color dark-7 rgba(63, 63, 70, 1);
+@define-color dark-6 rgba(82, 82, 91, 1);
+@define-color dark-5 rgba(113, 113, 122, 1);
+@define-color light-9 rgba(255, 255, 255, .9);
+@define-color light-8 rgba(255, 255, 255, .8);
+@define-color light-7 rgba(255, 255, 255, .7);
+@define-color light-6 rgba(255, 255, 255, .6);
+@define-color light-5 rgba(255, 255, 255, .5);
+
+* {
+  /* `otf-font-awesome` is required to be installed for icons */
+  font-family: JetBrainsMono Nerd Font Propo;
+  font-size: 15px;
+}
+
+window#waybar {
+  color: white;
+  background: transparent;
+}
+
+/* Workspaces : modules custom .wsbtn (voir config.jsonc + script wsbtn). */
+.wsbtn {
+  padding: 3px 7px;
+  margin: 7px 0px 7px 7px;
+  background: @dark-9;
+  border-radius: 2px;
+  color: @white;
+}
+
+/* Workspace persistant (1-4) affiché mais vide : grisé. */
+.wsbtn.empty {
+  background: rgba(24, 24, 24, .7);
+  color: @light-9;
+}
+
+.wsbtn.active {
+  background: @highlight;
+  color: black;
+  font-weight: 700;
+}
+
+.wsbtn:hover {
+  background: rgba(24, 24, 27, .4);
+  color: white;
+}
+
+#clock,
+#submap,
+#custom-keybinds,
+#custom-updates,
+#custom-power,
+#battery,
+#bluetooth,
+#network,
+#cpu,
+#memory,
+#volume {
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: @dark-8;
+  margin: 5px 10px 5px 0px;
+}
+
+#custom-power {
+  color: #f38ba8;
+}
+
+#custom-power:hover {
+  background: #f38ba8;
+  color: black;
+}
+
+#submap {
+  background: rgba(227, 81, 73, 1);
+  color: black;
+}
+
+#pulseaudio-slider {
+  padding: 0px;
+  margin: 0px;
+  margin-left: 8px;
+}
+
+#pulseaudio-slider slider {
+  all: unset;
+  min-height: 0;
+  min-width: 0;
+  opacity: 0;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+}
+
+#pulseaudio-slider trough {
+  min-height: 8px;
+  min-width: 75px;
+  border-radius: 5px;
+  background: @dark-7;
+}
+
+#pulseaudio-slider highlight {
+  min-width: 10px;
+  border-radius: 5px;
+  background: @highlight;
+}
+
+/* Groupe media : fond + coins arrondis, mais SANS padding propre. C'est le
+   padding qui, quand rien ne joue et que les 3 sous-modules sont vides, forçait
+   une taille minimale et laissait un ovale gris fantôme. En le déplaçant sur les
+   sous-modules (qui, eux, se réduisent à zéro quand leur script ne sort rien),
+   le groupe s'effondre à l'arrêt et le fond disparaît. La hauteur/les bords de
+   la pastille viennent donc des paddings ci-dessous. */
+#media {
+  background: @dark-8;
+  border-radius: 8px;
+  color: #42ff9f;
+  margin: 7px 0px 7px 80px;
+}
+
+#custom-media-animation {
+  font-size: 13px;
+  padding: 5px 6px 5px 10px; /* 10 à gauche = bord gauche de la pastille (lecture) */
+}
+
+#custom-media-now-playing {
+  padding: 5px 6px;
+  color: @light-9;
+}
+
+#custom-media-time {
+  color: @light-9;
+  font-size: 14px;
+  padding: 5px 10px 5px 6px; /* 10 à droite = bord droit de la pastille */
+}
+
+tooltip {
+  background: @dark-9;
+  border-radius: 5px;
+}
+
+tooltip label {
+  color: white;
+}

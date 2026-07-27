@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Standalone screenshot helper (adapted from HyDE's screenshot.sh), no hyde-shell dependency.
+# Saves to ~/Pictures/Screenshots and copies to clipboard (needs wl-clipboard).
+
+set -euo pipefail
+
+dir="$HOME/Pictures/Screenshots"
+mkdir -p "$dir"
+file="$dir/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png"
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send "Capture d'écran" "$1"; }
+copy() { command -v wl-copy >/dev/null 2>&1 && wl-copy < "$file"; }
+
+case "${1:-s}" in
+    s) # region selection
+        grim -g "$(slurp)" "$file" || exit 0
+        ;;
+    m) # focused monitor
+        mon=$(hyprctl monitors | awk '/^Monitor/{name=$2} /focused: yes/{print name; exit}')
+        grim -o "$mon" "$file"
+        ;;
+    p) # all monitors
+        grim "$file"
+        ;;
+    *)
+        echo "Usage: $(basename "$0") [s|m|p]"
+        echo "  s  region selection (default)"
+        echo "  m  focused monitor"
+        echo "  p  all monitors"
+        exit 1
+        ;;
+esac
+
+copy
+notify "Enregistrée : $file"

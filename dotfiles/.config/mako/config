@@ -1,0 +1,45 @@
+# mako — thème « aropixel », cohérent avec Hyprland + kitty.
+#   police : celle de kitty (JetBrainsMono Nerd Font Mono 11)
+#   fond   : noir comme kitty
+#   bordure: turquoise du logo (#03F1C5), arrondie à 10 (= rounding Hyprland),
+#            épaisseur 2 (= border_size Hyprland)
+# Rechargé à chaud avec : makoctl reload
+
+font=JetBrainsMono Nerd Font Mono 11
+background-color=#000000cc
+text-color=#CDD6F4
+border-color=#03F1C5
+border-size=2
+border-radius=10
+progress-color=over #03F1C526
+
+# Mise en page
+width=360
+height=150
+padding=12,16
+margin=12
+anchor=top-right
+layer=overlay
+default-timeout=5000
+icons=1
+max-icon-size=48
+markup=1
+format=<b>%s</b>\n%b
+
+# Regroupe les notifs d'une même appli
+[grouped]
+format=<b>%s</b>\n%b
+
+# Notifications basses : plus discret (bordure grise, plus courtes)
+[urgency=low]
+border-color=#8A90AC
+default-timeout=3000
+
+# Normales : turquoise (réglages globaux ci-dessus)
+[urgency=normal]
+border-color=#03F1C5
+
+# Critiques : rouge (palette fastfetch), persistantes jusqu'à action
+[urgency=critical]
+border-color=#F38BA8
+default-timeout=0

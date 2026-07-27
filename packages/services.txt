@@ -1,0 +1,5 @@
+# Services systemd (système) à activer au démarrage via install.sh.
+# Une entrée par ligne. Lignes vides et commentaires (#) ignorés.
+
+docker.service
+sddm.service

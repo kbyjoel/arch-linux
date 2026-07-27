@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# waybar-launch — maintient waybar en vie.
+#
+# Au lancement de la session, Hyprland exécute l'autostart (hyprland.lua) très
+# tôt. waybar peut alors démarrer avant que le compositeur soit prêt à accepter
+# les surfaces layer-shell et crashe aussitôt → la barre est absente au boot,
+# alors qu'un lancement manuel plus tard fonctionne. (Les autres autostart, de
+# simples scripts qui parlent à la socket IPC, ne subissent pas cette course.)
+#
+# On relance donc waybar tant qu'il meurt « trop vite » (crash de course). Une
+# fois qu'il tourne durablement puis sort (arrêt volontaire), on n'insiste pas.
+set -u
+
+# Un seul launcher à la fois (au cas où l'autostart serait rejoué).
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/waybar-launch.lock"
+flock -n 9 || exit 0
+
+while true; do
+    SECONDS=0
+    waybar
+    # A tourné assez longtemps pour être « vraiment » lancé : sortie volontaire.
+    (( SECONDS > 5 )) && break
+    sleep 1
+done
