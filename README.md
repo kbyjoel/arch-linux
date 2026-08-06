@@ -22,7 +22,9 @@ Le script :
 5. extrait les thèmes d'icônes vendorés (`assets/*.tar.xz`) dans
    `~/.local/share/icons/` et rafraîchit le cache d'icônes ;
 6. déploie le thème SDDM vendoré (`assets/sddm/`) dans
-   `/usr/share/sddm/themes/` et son drop-in dans `/etc/sddm.conf.d/` (sudo).
+   `/usr/share/sddm/themes/` et son drop-in dans `/etc/sddm.conf.d/` (sudo) ;
+7. installe les règles udev (`assets/udev/`) dans `/etc/udev/rules.d/` et
+   recharge udev (sudo).
 
 Options : `./install.sh --no-packages` ou `--no-dotfiles` (cette dernière saute
 aussi l'extraction des icônes).
@@ -60,7 +62,7 @@ au début d'`install.sh`.
 
 | Chemin | Rôle |
 |---|---|
-| `dotfiles/.config/hypr/` | Hyprland (`hyprland.lua` + `keybindings.lua`), verrou (`hyprlock.conf`) et hooks de veille (`hypridle.conf`) |
+| `dotfiles/.config/hypr/` | Hyprland (`hyprland.lua` + `keybindings.lua` + `monitors.lua`), verrou (`hyprlock.conf`) et hooks de veille (`hypridle.conf`) |
 | `dotfiles/.config/rofi/` | Thème + lanceur d'apps + thème dmenu |
 | `dotfiles/.config/waybar/` | Barre (config, style, modules media) |
 | `dotfiles/.config/mako/` | Notifications (daemon `mako`) — thème aropixel : police kitty, fond noir, bordure turquoise arrondie, rouge pour les critiques |
@@ -78,6 +80,7 @@ au début d'`install.sh`.
 | `dotfiles/.local/bin/` | Scripts : `rofi-launcher`, `keybind-hint`, `screenshot`, `system-update`, `wlogout-launch`, `screenlock`, `lock-before-sleep` (retient la veille le temps que le verrou s'affiche), `wallpaper-daemon`, `waybar-launch` (relance waybar s'il crashe au boot), `wsbtn` + `waybar-ws-refresh` (workspaces waybar) |
 | `assets/*.tar.xz` | Thèmes d'icônes extraits par `install.sh` (ex. `Zafiro-Nord-Black` pour le lanceur rofi) |
 | `assets/sddm/` | Thème SDDM `silent` allégé (config `rei` active, fond vidéo perso `cat.mp4`) + drop-in `/etc/sddm.conf.d/` + avatar (`faces/avatar.face.icon`), déployés par `install.sh` |
+| `assets/udev/` | Règles udev copiées dans `/etc/udev/rules.d/` par `install.sh`. `60-vial.rules` donne à la session locale l'accès `hidraw` du clavier Corne v4 (configuration via [vial.rocks](https://vial.rocks)). Voir « Clavier Corne v4 » plus bas |
 
 ## Fond d'écran par workspace
 
@@ -115,6 +118,35 @@ puisse les distinguer et les router séparément.
 
 Dolphin et les DevTools de Chrome sont flottants (respectivement centré et collé
 à droite) plutôt que rattachés à un workspace.
+
+### Plusieurs écrans
+
+`hypr/monitors.lua` répartit les workspaces quand la machine a plusieurs
+écrans : **1 à 5 à gauche, 6 (Web) à droite**. Éditeur, terminal et mail à
+gauche, navigateur à droite, à chaque démarrage.
+
+> **Pourquoi épingler les 1-5 aussi, et pas seulement le 6.** Un workspace vit
+> sur l'écran où il a été créé, et au démarrage chaque écran s'attribue le
+> premier workspace libre : gauche → 1, **droite → 2**. Le second écran captait
+> donc le 2 à chaque boot, et les PWA qui y sont routées (Gmail, Outlook,
+> Agenda) s'ouvraient à droite. L'attribut `default` de la règle fixe en plus le
+> workspace d'ouverture de chaque écran (1 à gauche, 6 à droite).
+
+Aucun nom d'écran n'est codé en dur : gauche et droite sont déduits de la
+géométrie (`x` le plus petit / le plus grand), et le calcul est rejoué au
+démarrage et à chaque branchement / débranchement. Sur une machine mono-écran
+(le portable) aucune règle n'est posée, le comportement est celui d'avant.
+
+> **Limite d'Hyprland** : un workspace ne peut pas s'étendre sur deux écrans. Il
+> n'existe pas de disposition « 1re fenêtre à gauche, 2e à droite, suivantes en
+> split » — un workspace est affiché sur un écran et un seul. Pour envoyer
+> ponctuellement une fenêtre sur l'autre écran, voir les raccourcis ci-dessous.
+
+| Raccourci | Effet |
+|---|---|
+| `SUPER` + `ALT` + `←`/`→` | Envoie la fenêtre active sur l'écran voisin, où qu'elle soit dans le pavage |
+| `SUPER` + `CTRL` + `SHIFT` + `←`/`→` | Déplace la fenêtre dans le pavage, et ne franchit l'écran que si elle est déjà au bord |
+| `SUPER` + `←`/`→` | Déplace le focus, en franchissant les écrans |
 
 > **Piège** : dans l'API Lua, `size` et `move` n'acceptent que des **pixels**.
 > Un pourcentage est accepté sans erreur puis ignoré silencieusement. D'où le
@@ -179,6 +211,23 @@ ce sont ceux du plan ci-dessus, tous utilisés au quotidien) ; 7 à 10
 apparaissent à l'usage. Le seuil est `PERSISTENT` dans `wsbtn`. `waybar-ws-refresh` écoute la socket2 et envoie
 `SIGRTMIN+1` à waybar pour garder la surbrillance synchro sans polling.
 
+### Surbrillance par écran
+
+Contrepartie des modules custom : contrairement au module intégré, ils ne savent
+pas sur quelle barre — donc sur quel écran — ils s'affichent, et waybar ne le
+leur passe pas. Toutes les barres surligneraient donc le workspace focalisé
+globalement, au lieu de celui affiché sur leur propre écran.
+
+`waybar-launch` règle ça en **générant une config « une barre par écran »** dès
+qu'il y en a plusieurs (dans `$XDG_RUNTIME_DIR`, jamais versionnée) : chaque
+barre est une copie de `config.jsonc` où sont injectés `"output"` et le nom de
+l'écran passé à `wsbtn` (2ᵉ argument). `config.jsonc` reste la source unique,
+rien n'y est dupliqué à la main. Le tableau généré se termine par une barre de
+repli visant « tout autre écran », pour qu'un écran branché après le démarrage
+de waybar ait quand même une barre (avec la surbrillance globale, jusqu'au
+prochain redémarrage de waybar). Sur une machine mono-écran, aucune génération :
+waybar démarre sur `config.jsonc` tel quel.
+
 ## Associations de fichiers (Dolphin)
 
 Double-cliquer un fichier dans Dolphin l'ouvre avec l'appli par défaut : **imv**
@@ -213,6 +262,48 @@ Zéro = tout est résolu. Un nombre élevé (y compris pour des apps de
 invalide. **Attention** : ce menu est du XML, son commentaire ne doit contenir
 **aucun double tiret** (interdit en XML) — sinon le fichier est rejeté en
 silence et on retombe pile sur le bug.
+
+## Clavier Corne v4 (Vial)
+
+Le Corne v4 tourne sous un firmware **Vial** et se configure depuis le
+navigateur sur [vial.rocks](https://vial.rocks) (WebHID — Chrome/Chromium
+uniquement, **Firefox n'implémente pas WebHID**).
+
+Sans règle udev, `/dev/hidraw*` appartient à `root:root` en `0600` : le
+navigateur arrive à **énumérer** le clavier (il apparaît bien dans le sélecteur
+de périphérique, marqué comme associé) mais ne peut pas **ouvrir** le nœud, et
+la page reste indéfiniment sur *« connecting to the device »*. C'est le seul
+symptôme, il ne remonte aucune erreur.
+
+`assets/udev/60-vial.rules` corrige ça en posant `TAG+="uaccess"`, qui fait
+appliquer par `systemd-logind` une ACL au profit de l'utilisateur de la session
+graphique active. Pas de groupe à rejoindre, pas de `MODE`/`GROUP` en dur.
+
+**Le préfixe `60-` est le point critique.** La doc officielle de Vial fait
+nommer ce fichier `99-vial.rules`, ce qui ne marche **que** si le compte
+appartient déjà au groupe `users` : les fichiers de `rules.d` sont évalués dans
+l'ordre lexicographique, et `/usr/lib/udev/rules.d/73-seat-late.rules` déclenche
+`RUN{builtin}+="uaccess"` sur `TAG=="uaccess"` au rang 73. Un fichier `99-`
+pose le tag **après** ce test : le tag est bien présent sur le périphérique
+(visible dans `udevadm info`), mais le builtin n'a jamais été appelé et aucune
+ACL n'est posée. D'où un diagnostic trompeur — tout a l'air correct.
+
+Après installation, **débranche/rebranche le clavier** : le builtin `uaccess`
+ne s'exécute qu'au traitement d'un évènement `add`, un `udevadm trigger` sur un
+nœud déjà présent ne repose pas l'ACL de façon fiable. Vérification :
+
+```sh
+getfacl -p /dev/hidraw2 | grep "$USER"     # attendu : user:<toi>:rw-
+```
+
+Le nœud exact varie ; pour le retrouver :
+
+```sh
+grep -l . /sys/class/hidraw/hidraw*/device/uevent | xargs grep -l Corne
+```
+
+La règle filtre sur `ATTRS{serial}=="*vial:*"` et couvre donc tout clavier sous
+firmware Vial, pas seulement ce Corne.
 
 Beaucoup de ces configs sont adaptées depuis le
 [projet HyDE](https://github.com/hyde-project/hyde), rendues autonomes.
