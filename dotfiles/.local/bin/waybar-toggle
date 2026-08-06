@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Bascule waybar : éteint la barre si elle tourne, la rallume sinon.
+# Lié à ALT_R + CONTROL_R dans hypr/keybindings.lua.
+#
+# POURQUOI UN SCRIPT, ET PAS LA COMMANDE EN CLAIR DANS LE BIND
+# Éteindre proprement suppose de tuer aussi `waybar-launch`, qui est un script
+# bash : son nom de processus est « bash », il faut donc `pkill -f`, qui compare
+# à la ligne de commande COMPLÈTE. Or si la commande est écrite dans le bind,
+# Hyprland l'exécute via un `sh -c "<toute la commande>"` dont la ligne de
+# commande contient elle-même « waybar-launch » — le pkill tue alors le shell
+# qui l'exécute, avant qu'il n'ait tué la barre. Résultat observé : superviseur
+# mort, barre toujours là, bascule à moitié faite.
+# La ruse habituelle du motif '[w]aybar-launch' n'y suffit PAS, parce que la
+# branche qui rallume contient de toute façon le nom non protégé.
+# Déporté ici, le processus appelant a pour ligne de commande
+# « bash ~/.local/bin/waybar-toggle » : plus aucune collision possible.
+#
+# POURQUOI waybar-launch ET PAS waybar NU
+# C'est lui qui régénère la config « une barre par écran » (voir son en-tête) :
+# relancer waybar seul fait perdre la surbrillance par écran des boutons de
+# workspace dès qu'il y a plus d'un moniteur. C'est aussi le superviseur qui
+# relance waybar s'il crashe au démarrage.
+
+set -u
+
+if pgrep -x waybar >/dev/null; then
+    # Le superviseur D'ABORD : tuer la barre en premier lui laisserait une
+    # fenêtre pour la relancer (il ne renonce qu'au-delà de 5 s de
+    # fonctionnement, cf. sa boucle).
+    # Crochets conservés par précaution, au cas où ce code serait un jour
+    # réinjecté dans un contexte où la ligne de commande contient le nom.
+    pkill -f '[w]aybar-launch' || true
+    pkill -x waybar || true
+else
+    setsid -f waybar-launch
+fi

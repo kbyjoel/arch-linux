@@ -59,6 +59,8 @@ x-scheme-handler/unknown=google-chrome.desktop
 
 # Écrit par Claude Code (`claude --continue` depuis un lien).
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/mailto=google-chrome.desktop
+x-scheme-handler/webcal=google-chrome.desktop
 
 [Added Associations]
 # Alternatives proposées dans « Ouvrir avec » sans devenir le défaut.

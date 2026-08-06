@@ -211,17 +211,31 @@
     "tooltip-format": "{used:0.1f}G/{total:0.1f}G used",
     "on-click": "exec kitty --title=htop htop",
   },
+  // Réseau. Le module intégré suit l'interface qui porte la route par défaut :
+  // avec l'ethernet en métrique 100 et le WiFi en 600 (cf. /etc/systemd/network),
+  // il affiche le câble tant qu'il est branché et bascule seul sur le WiFi sinon.
+  //
+  // HyDE met le débit derrière `format-alt`, que le clic fait basculer. Ici le
+  // clic est pris par le sélecteur de réseau, et la barre reste sobre : icône +
+  // IP en ethernet, icône + signal en WiFi. Tout le détail — dont le débit
+  // descendant/montant — vit dans le tooltip, au survol.
+  //
+  // `interval` sert encore malgré l'absence de débit dans la barre : c'est lui
+  // qui rafraîchit les compteurs lus par les tooltips.
+  //
+  // `network-ui` choisit l'outil selon la pile présente (impala/iwctl pour iwd,
+  // nmtui pour NetworkManager) — nécessaire car nmtui n'existe pas sur la tour.
   "network": {
-    "format": "",
-    "format-wifi": "",
-    "format-ethernet": "",
+    "interval": 2,
+    "format-ethernet": " {ipaddr}",
+    "format-wifi": "  {signalStrength}%",
+    "format-linked": " {ifname} (sans IP)",
     "format-disconnected": "󰤭", //An empty format will hide the module.
-    "tooltip-format": "{ifname} via {gwaddr} 󰊗",
-    "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
-    "tooltip-format-ethernet": "{ifname} ",
-    "tooltip-format-disconnected": "󰖪",
+    "tooltip-format-ethernet": "Interface : <b>{ifname}</b>\nIP : <b>{ipaddr}/{cidr}</b>\nPasserelle : <b>{gwaddr}</b>\nMasque : <b>{netmask}</b>\n\n <b>{bandwidthDownBytes}</b>\t <b>{bandwidthUpBytes}</b>",
+    "tooltip-format-wifi": "<big><b>{essid}</b></big>\nSignal : <b>{signaldBm} dBm ({signalStrength}%)</b>\nFréquence : <b>{frequency} MHz</b>\nInterface : <b>{ifname}</b>\nIP : <b>{ipaddr}/{cidr}</b>\nPasserelle : <b>{gwaddr}</b>\n\n <b>{bandwidthDownBytes}</b>\t <b>{bandwidthUpBytes}</b>",
+    "tooltip-format-disconnected": "󰖪  Déconnecté",
     "max-length": 50,
-    "on-click": "exec kitty --title=nmtui nmtui",
+    "on-click": "exec network-ui",
   },
   "clock": {
     "format": "󰥔 {:L%a %d. %b %H:%M}",

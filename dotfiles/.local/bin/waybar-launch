@@ -1,15 +1,63 @@
 #!/usr/bin/env bash
-# waybar-launch — maintient waybar en vie.
+# waybar-launch — maintient waybar en vie, et lui construit une config par écran.
 #
-# Au lancement de la session, Hyprland exécute l'autostart (hyprland.lua) très
-# tôt. waybar peut alors démarrer avant que le compositeur soit prêt à accepter
-# les surfaces layer-shell et crashe aussitôt → la barre est absente au boot,
-# alors qu'un lancement manuel plus tard fonctionne. (Les autres autostart, de
-# simples scripts qui parlent à la socket IPC, ne subissent pas cette course.)
+# 1) Survie. Au lancement de la session, Hyprland exécute l'autostart
+# (hyprland.lua) très tôt. waybar peut alors démarrer avant que le compositeur
+# soit prêt à accepter les surfaces layer-shell et crashe aussitôt → la barre est
+# absente au boot, alors qu'un lancement manuel plus tard fonctionne. (Les autres
+# autostart, de simples scripts qui parlent à la socket IPC, ne subissent pas
+# cette course.) On relance donc waybar tant qu'il meurt « trop vite ». Une fois
+# qu'il tourne durablement puis sort (arrêt volontaire), on n'insiste pas.
 #
-# On relance donc waybar tant qu'il meurt « trop vite » (crash de course). Une
-# fois qu'il tourne durablement puis sort (arrêt volontaire), on n'insiste pas.
+# 2) Multi-écrans. Les boutons de workspace sont des modules custom (script
+# `wsbtn`) : contrairement au module hyprland/workspaces intégré, ils ne savent
+# pas sur quel écran est la barre qui les affiche, et waybar ne le leur passe
+# pas. Sans rien, la même commande tourne pour toutes les barres et elles
+# surlignent toutes le workspace focalisé globalement.
+# On génère donc, quand il y a plusieurs écrans, une config waybar « une barre
+# par écran » : chaque barre est une copie de config.jsonc où l'on injecte
+# "output" et où `wsbtn N` devient `wsbtn N <écran>`. config.jsonc reste la
+# source unique — rien n'y est dupliqué à la main.
 set -u
+
+BASE="$HOME/.config/waybar/config.jsonc"
+STYLE="$HOME/.config/waybar/style.css"
+GEN="${XDG_RUNTIME_DIR:-/tmp}/waybar-config-multi.jsonc"
+
+# Noms des écrans actifs, dans l'ordre de hyprctl.
+list_monitors() { hyprctl monitors 2>/dev/null | awk '$1 == "Monitor" { print $2 }'; }
+
+# Une barre = config.jsonc + "output" injecté juste après l'accolade ouvrante
+# + le nom de l'écran ajouté aux appels à wsbtn. $1 = valeur JSON de "output",
+# $2 = nom d'écran à passer à wsbtn (vide = on laisse les appels tels quels).
+bar_config() {
+    local output_json="$1" mon="${2:-}"
+    if [[ -n "$mon" ]]; then
+        sed -e "0,/^{/s//{\n  \"output\": $output_json,/" \
+            -e "s/\"wsbtn \([0-9][0-9]*\)\"/\"wsbtn \1 $mon\"/" "$BASE"
+    else
+        sed -e "0,/^{/s//{\n  \"output\": $output_json,/" "$BASE"
+    fi
+}
+
+# Écrit dans $GEN un tableau de barres : une par écran connu, plus une barre de
+# repli pour tout écran branché APRÈS le démarrage de waybar — sans elle, un
+# écran inconnu de la config n'aurait aucune barre du tout. Ce repli garde la
+# surbrillance globale (pas de nom d'écran à lui donner) jusqu'au prochain
+# redémarrage de waybar, qui le prendra alors en compte nominativement.
+generate_config() {
+    local mons=("$@") m excl=""
+    {
+        printf '[\n'
+        for m in "${mons[@]}"; do
+            bar_config "\"$m\"" "$m"
+            printf ',\n'
+            excl+="\"!$m\", "
+        done
+        bar_config "[$excl\"*\"]"
+        printf '\n]\n'
+    } >"$GEN"
+}
 
 # Un seul launcher à la fois (au cas où l'autostart serait rejoué).
 exec 9>"${XDG_RUNTIME_DIR:-/tmp}/waybar-launch.lock"
@@ -17,7 +65,17 @@ flock -n 9 || exit 0
 
 while true; do
     SECONDS=0
-    waybar
+
+    # Recalculé à chaque tentative : un redémarrage de waybar reprend ainsi la
+    # disposition d'écrans du moment.
+    mapfile -t MONS < <(list_monitors)
+    if (( ${#MONS[@]} > 1 )) && generate_config "${MONS[@]}"; then
+        waybar -c "$GEN" -s "$STYLE"
+    else
+        # Mono-écran (ou hyprctl pas encore joignable) : config standard.
+        waybar
+    fi
+
     # A tourné assez longtemps pour être « vraiment » lancé : sortie volontaire.
     (( SECONDS > 5 )) && break
     sleep 1

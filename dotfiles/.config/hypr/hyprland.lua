@@ -30,6 +30,11 @@ hl.monitor({
     scale    = "1",
 })
 
+-- Épinglage du workspace 6 « Web » sur l'écran de droite quand il y en a
+-- plusieurs (poste fixe) ; sans effet sur le portable, mono-écran.
+-- Voir ~/.config/hypr/monitors.lua.
+require("monitors")
+
 
 -------------------
 ---- AUTOSTART ----

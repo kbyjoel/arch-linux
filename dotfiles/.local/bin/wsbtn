@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Bouton d'UN workspace pour waybar (modules custom/wsN). Argument : le numéro.
+# Bouton d'UN workspace pour waybar (modules custom/wsN).
+# Arguments : le numéro, et optionnellement le nom de l'écran de la barre.
 #
 # Sort du JSON {text,class} consommé par waybar (return-type json) :
 #   active   -> workspace courant
@@ -7,15 +8,32 @@
 #   empty    -> workspace persistant (<= PERSISTENT) mais vide : toujours affiché
 # Un workspace > PERSISTENT et inutilisé ne sort RIEN -> le module se masque.
 #
+# Le 2e argument rend la surbrillance propre à chaque écran : chaque barre
+# surligne le workspace affiché SUR SON écran, pas le workspace focalisé
+# globalement (sans quoi les deux barres surlignent la même chose). C'est
+# waybar-launch qui génère une config par écran et passe ce nom ; sans lui
+# (mono-écran), l'argument est absent et on retombe sur le workspace focalisé.
+#
 # Utilisé avec "signal":1 : rafraîchi par SIGRTMIN+1, émis par waybar-ws-refresh
 # à chaque changement de workspace. Pas de jq (absent) : on parse en awk.
 
 set -euo pipefail
 
-n="${1:?usage: wsbtn <numéro>}"
+n="${1:?usage: wsbtn <numéro> [écran]}"
+mon="${2:-}"
 PERSISTENT=6
 
-active="$(hyprctl activeworkspace 2>/dev/null | awk '/^workspace ID/{print $3; exit}')"
+if [[ -n "$mon" ]]; then
+    # Workspace affiché sur CET écran. `hyprctl monitors` liste un bloc par
+    # écran ; on saute jusqu'au bon puis on lit sa ligne « active workspace ».
+    active="$(hyprctl monitors 2>/dev/null | awk -v m="$mon" '
+        $1 == "Monitor" && $2 == m { found = 1; next }
+        found && $1 == "active" && $2 == "workspace:" { print $3; exit }
+    ')"
+else
+    active="$(hyprctl activeworkspace 2>/dev/null | awk '/^workspace ID/{print $3; exit}')"
+fi
+
 if [[ "$n" == "$active" ]]; then
     printf '{"text":"%s","class":["wsbtn","active"]}\n' "$n"
     exit 0

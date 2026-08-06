@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Ouvre le sélecteur de réseau dans un terminal. Lancé par le clic sur le module
+# "network" de waybar.
+#
+# Le repo est partagé entre des machines qui ne gèrent pas le réseau pareil : la
+# tour est en systemd-networkd + iwd (nmtui n'y est même pas installé), d'autres
+# en NetworkManager. Figer un outil dans config.jsonc laisse donc le clic mort
+# sur l'une des deux — d'où la détection au lancement.
+#
+# C'est aussi ce qui permet, câble débranché, d'aller choisir un réseau WiFi
+# directement depuis la barre.
+
+set -euo pipefail
+
+TERMINAL=(kitty --title=network-ui)
+
+# NetworkManager d'abord : s'il tourne, c'est lui qui pilote quoi qu'il y ait
+# d'autre d'installé. Sinon iwd, avec impala (vraie TUI) et iwctl en repli —
+# iwctl n'est qu'un shell interactif, mais mieux que rien si impala manque.
+pick_tool() {
+    if systemctl is-active --quiet NetworkManager.service && command -v nmtui >/dev/null 2>&1; then
+        printf 'nmtui'
+        return 0
+    fi
+    if systemctl is-active --quiet iwd.service; then
+        if command -v impala >/dev/null 2>&1; then printf 'impala'; return 0; fi
+        if command -v iwctl  >/dev/null 2>&1; then printf 'iwctl';  return 0; fi
+    fi
+    return 1
+}
+
+if ! tool="$(pick_tool)"; then
+    notify-send -u critical "Réseau" \
+        "Aucun sélecteur disponible (ni nmtui, ni impala, ni iwctl)."
+    exit 1
+fi
+
+exec "${TERMINAL[@]}" "$tool"

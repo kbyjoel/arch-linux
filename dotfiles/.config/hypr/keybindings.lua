@@ -41,7 +41,12 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "fullscreen", actio
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("screenlock"), { description = "Verrouiller l'écran" })
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.pin(), { description = "Épingler la fenêtre active" })
 hl.bind("CONTROL + ALT + Delete", hl.dsp.exec_cmd("wlogout-launch"), { description = "Menu de déconnexion" })
-hl.bind("ALT_R + CONTROL_R", hl.dsp.exec_cmd("pkill -x waybar || (waybar & disown)"), { description = "Basculer waybar" })
+-- La logique est dans ~/.local/bin/waybar-toggle et PAS en clair ici : elle doit
+-- tuer `waybar-launch` via `pkill -f`, qui matcherait alors le `sh -c` exécutant
+-- ce bind (sa ligne de commande contiendrait « waybar-launch »). Voir l'en-tête
+-- du script. Elle passe par waybar-launch, pas par waybar nu, pour conserver la
+-- config « une barre par écran » et le superviseur anti-crash.
+hl.bind("ALT_R + CONTROL_R", hl.dsp.exec_cmd("waybar-toggle"), { description = "Basculer waybar" })
 
 hl.bind(mainMod .. " + CONTROL + H", hl.dsp.group.prev(), { description = "Groupe actif précédent" })
 hl.bind(mainMod .. " + CONTROL + L", hl.dsp.group.next(), { description = "Groupe actif suivant" })
@@ -69,6 +74,15 @@ hl.bind(mainMod .. " + CONTROL + SHIFT + up", hl.dsp.window.move({ direction = "
   { description = "Déplacer la fenêtre en haut" })
 hl.bind(mainMod .. " + CONTROL + SHIFT + down", hl.dsp.window.move({ direction = "d" }),
   { description = "Déplacer la fenêtre en bas" })
+
+-- Envoi de la fenêtre active sur l'écran voisin, quelle que soit sa place dans
+-- le pavage. À distinguer de SUPER+CONTROL+SHIFT+flèche juste au-dessus, qui
+-- déplace d'abord DANS le workspace et ne franchit l'écran que si la fenêtre est
+-- déjà au bord. La fenêtre atterrit sur le workspace affiché par l'écran visé.
+hl.bind(mainMod .. " + ALT + left", hl.dsp.window.move({ monitor = "l" }),
+  { description = "Envoyer la fenêtre sur l'écran de gauche" })
+hl.bind(mainMod .. " + ALT + right", hl.dsp.window.move({ monitor = "r" }),
+  { description = "Envoyer la fenêtre sur l'écran de droite" })
 
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Maintenir pour déplacer" })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),
