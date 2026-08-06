@@ -4,5 +4,9 @@
 # Sauvegardes locales de configs (ex. ancien prompt starship avant bascule)
 backups/
 
+# Configuration locale de Claude Code (settings, historiques, mémoire projet) :
+# spécifique à la machine et à la session, aucun intérêt à la reconstruire.
+.claude/
+
 # Divers
 .DS_Store
