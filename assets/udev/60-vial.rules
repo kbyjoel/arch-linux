@@ -1,0 +1,5 @@
+# Vial / QMK — accès hidraw pour l'utilisateur de la session locale (vial.rocks)
+# IMPORTANT : doit trier AVANT /usr/lib/udev/rules.d/73-seat-late.rules,
+# qui déclenche RUN{builtin}+="uaccess" sur TAG=="uaccess". Un fichier 99-*
+# poserait le tag trop tard et l'ACL ne serait jamais appliquée.
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{serial}=="*vial:*", TAG+="uaccess"

@@ -18,13 +18,13 @@ qt6-wayland
 # Le thème silent est vendorisé dans assets/sddm/ (déployé par install.sh),
 # on n'installe donc pas le paquet AUR sddm-silent-theme, mais il faut ses
 # dépendances pour que le thème s'affiche (SVG, clavier virtuel, polices…).
+# La police du thème (RedHatDisplay) n'est pas dans les dépôts : voir aur.txt.
 sddm
 qt6-svg
 qt6-virtualkeyboard
 qt6-multimedia-ffmpeg
 qt6-declarative
 qt6-imageformats
-redhat-fonts
 
 # --- Barre / lanceur / notifications ---
 waybar
@@ -72,7 +72,11 @@ fastfetch
 starship
 
 # --- Réseau / bluetooth ---
-nm-connection-editor
+# Rien de spécifique au gestionnaire réseau ici : la pile varie d'une machine à
+# l'autre selon le choix fait à l'installation (voir la section « Pile réseau »
+# d'install.sh, qui détecte et installe le nécessaire). Poser nm-connection-editor
+# en dur ici déposait une interface graphique NetworkManager sur des machines
+# sans NetworkManager.
 bluetui
 
 # --- Éditeur / dev (Neovim + LazyVim) ---
@@ -83,6 +87,27 @@ lazygit
 # zoxide : cd intelligent dans le shell. Sa base de données sert aussi de source
 # au picker de projets de LazyVim (<leader>fp).
 zoxide
+
+# --- PHP (outillage hôte, pas runtime) ---
+# Le code tourne dans Docker ; ce PHP-là ne sert QU'aux outils qui s'exécutent
+# côté éditeur : le serveur LSP phpactor, php-cs-fixer et phpstan (lancés depuis
+# tools/bin/ du projet). Inutile d'aligner sa version sur celle du conteneur.
+# ATTENTION : sur Arch, la plupart des extensions (intl, iconv, soap…) sont
+# livrées par le paquet `php` mais DÉSACTIVÉES dans /etc/php/php.ini. C'est le
+# drop-in assets/php/conf.d/ (déployé par install.sh) qui les active.
+php
+# php-legacy (8.3) : cohabite avec php (8.5) sous le binaire `php-legacy`.
+# NÉCESSAIRE, pas redondant : PHP-CS-Fixer refuse de s'exécuter au-delà de PHP
+# 8.4 (« currently supports PHP syntax only up to PHP 8.4 ») et sort sans rien
+# formater. C'est donc php-legacy qui fait tourner le fixer, pendant que
+# phpactor et phpstan restent sur le php principal. Bonus : 8.3 est plus proche
+# du 8.2 des conteneurs applicatifs.
+php-legacy
+# composer : indispensable pour installer les vendor/ en local. Même si les
+# dépendances sont installées dans le conteneur, phpactor a besoin des vendor/
+# présents sur l'hôte pour indexer les classes de Symfony et des bundles —
+# sans ça, aucune complétion ni « aller à la définition » hors de src/.
+composer
 
 # --- Conteneurs ---
 docker

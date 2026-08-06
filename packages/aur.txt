@@ -9,6 +9,11 @@ spotify
 # « teams-for-linux » — voir la règle de workspace dans hypr/userprefs.lua.
 teams-for-linux
 
+# webcord : client Discord tiers (Electron), qui n'utilise ni le client ni l'API
+# officiels. Classe de fenêtre « webcord » — comme Teams, il a sa règle de
+# workspace dans hypr/userprefs.lua (workspace 3, « Discussion »).
+webcord
+
 # fzf-tab : remplace le menu de complétion Tab de zsh par une UI fzf.
 # Sourcé par .zshrc depuis /usr/share/zsh/plugins/fzf-tab/.
 fzf-tab-git
@@ -16,3 +21,8 @@ fzf-tab-git
 # Fond d'écran vidéo — utilisé par le script `screenlock` pour jouer cat.mp4
 # (la vidéo du login SDDM) en fond animé du verrou hyprlock.
 mpvpaper
+
+# redhat-fonts : famille RedHatDisplay, police du thème SDDM silent vendorisé
+# (assets/sddm/themes/silent/configs/*.conf). Absente des dépôts officiels,
+# donc ici et pas dans pacman.txt.
+redhat-fonts
