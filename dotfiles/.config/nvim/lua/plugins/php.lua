@@ -17,9 +17,9 @@
 
 -- Analyser SANS la baseline PHPStan dans l'éditeur (la CI, elle, la garde via
 -- `castor qa`). Choix assumé : une baseline est de la dette explicitement mise
--- de côté, et invisible elle ne diminue jamais. Sur monorepo elle masque
--- 7 563 erreurs réparties sur 1 658 fichiers ; les voir en éditant, c'est se
--- donner l'occasion de les traiter au passage.
+-- de côté, et invisible elle ne diminue jamais. Sur le monorepo qui a motivé
+-- ce fichier, elle masque 7 563 erreurs réparties sur 1 658 fichiers ; les
+-- voir en éditant, c'est se donner l'occasion de les traiter au passage.
 --
 -- Effet de bord à connaître : sur un fichier legacy très chargé (jusqu'à 80
 -- erreurs ici), l'erreur qu'on vient d'introduire se noie dans les anciennes.
@@ -298,8 +298,8 @@ end
 --
 -- Un paquet du monorepo tiré par une application n'a pas de vendor/ à lui :
 -- ses propres dépendances sont installées chez son consommateur, qui le
--- référence par un lien symbolique dans son vendor/. Ici, lib-shop est tiré
--- par frontend via applications/frontend/vendor/<éditeur>/lib-shop.
+-- référence par un lien symbolique dans son vendor/. Typiquement, lib-shop est
+-- tiré par frontend via applications/frontend/vendor/<éditeur>/lib-shop.
 -- L'ouvrir avec lui-même pour racine couperait le serveur de tout Symfony.
 --
 -- Déduit du LIEN SYMBOLIQUE et non des composer.json : c'est l'installation
@@ -389,7 +389,7 @@ return {
             -- Ajoute automatiquement le `\` devant les fonctions natives dans
             -- un namespace (strlen -> \strlen). Attendu par le fixer
             -- `native_function_invocation` du preset @Symfony:risky, actif
-            -- dans monorepo : évite que chaque sauvegarde reformate ce que
+            -- sur le monorepo : évite que chaque sauvegarde reformate ce que
             -- phpactor vient d'écrire.
             ["code_transform.import_globals"] = true,
 
@@ -490,7 +490,7 @@ return {
     optional = true,
     opts = {
       -- LazyVim déclenche aussi les linters sur InsertLeave. À retirer ici :
-      -- PHPStan met ~3 s sur un seul fichier (mesuré sur monorepo, niveau
+      -- PHPStan met ~3 s sur un seul fichier (mesuré sur le monorepo, niveau
       -- 7), donc sortir du mode insertion lancerait une analyse complète
       -- toutes les quelques secondes. À la sauvegarde et à l'ouverture, c'est
       -- le bon rythme pour de l'analyse statique.
@@ -543,8 +543,8 @@ return {
             function()
               -- L'autoloader. PHPStan le cherche sinon dans le CWD, qui est
               -- celui de Neovim : ouvrir nvim à la racine d'un monorepo donne
-              -- alors un mur de « class.notFound » (18 sur un simple Kernel.php
-              -- de monorepo), parce que l'autoload vit dans l'application,
+              -- alors un mur de « class.notFound » (18 sur un simple
+              -- Kernel.php), parce que l'autoload vit dans l'application,
               -- pas à la racine. On le déduit de l'emplacement de la config,
               -- ce qui reproduit exactement ce que fait la CI du projet.
               local config = phpstan_config(vim.fn.expand("%:p"))

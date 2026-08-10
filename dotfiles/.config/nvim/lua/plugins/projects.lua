@@ -15,7 +15,7 @@ return {
           -- `ignored = true` désactive le .gitignore (--no-ignore côté fd) pour
           -- voir les .env & co. Effet de bord : le var/ de chaque application
           -- Symfony revient dans l'arbre ET dans la recherche par nom — 13 000
-          -- fichiers de cache/log générés sur monorepo, qui noient tout.
+          -- fichiers de cache/log générés sur un monorepo, qui noient tout.
           -- On les réexclut donc explicitement, avec les autres répertoires
           -- générés qui reviennent pour la même raison. Les patterns sont
           -- ancrés à droite : `**/var` attrape applications/*/var sans toucher
